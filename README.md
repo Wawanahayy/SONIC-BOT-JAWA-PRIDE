@@ -28,7 +28,7 @@ Sonic Bot is a Node.js application for sending SOL (Solana) cryptocurrency trans
 2. Navigate into the project directory:
 
    ```bash
-   cd sonic-odyssey-bot
+   cd SONIC-BOT-JAWA-PRIDE
    ```
 
 3. Install dependencies:
