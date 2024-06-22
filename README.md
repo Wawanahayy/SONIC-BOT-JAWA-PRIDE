@@ -8,9 +8,6 @@ Sonic Bot is a Node.js application for sending SOL (Solana) cryptocurrency trans
 ## Features
 
 - **Transaction Sending**: Sends SOL transactions from multiple accounts to random addresses.
-- **Input Methods**: Supports input via seed phrases or private keys.
-- **Random Address Generation**: Generates a specified number of random addresses for sending transactions.
-- **Adjustable Amount of SOL**: Allows users to specify the amount of SOL to send in each transaction.
 
 ## Prerequisites
 
