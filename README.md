@@ -22,7 +22,7 @@ Sonic Bot is a Node.js application for sending SOL (Solana) cryptocurrency trans
 1. Clone the repository:
 
    ```bash
-   git clone (https://github.com/Wawanahayy/SONIC-BOT-JAWA-PRIDE.git)
+   git clone https://github.com/Wawanahayy/SONIC-BOT-JAWA-PRIDE.git
    ```
 
 2. Navigate into the project directory:
