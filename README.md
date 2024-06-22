@@ -1,7 +1,7 @@
 # SONIC-BOT-JAWA-PRIDE
 JAWA PRIDE AIRDROP
 
-# Sonic Odyssey Bot
+# Sonic Bot
 
 Sonic Bot is a Node.js application for sending SOL (Solana) cryptocurrency transactions using seed phrases or private keys to random addresses.
 
