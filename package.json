@@ -1,7 +1,7 @@
 {
   "name": "ONIC-BOT-JAWA-PRIDE",
   "version": "1.0.0",
-  "description": "Sonic Odyssey Bot is an application for sending SOL (Solana) cryptocurrency transactions using seed phrases or private keys to random addresses.",
+  "description": " sending SOL (Solana) cryptocurrency transactions using seed phrases or private keys to random addresses.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
