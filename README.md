@@ -39,3 +39,4 @@ JAWA PRIDE AIRDROP
 ```bash
 npm start
 ```
+## JUST WAIT UNTIL DONE TX ##

@@ -79,7 +79,7 @@ const { displayHeader } = require('./src/displayUtils');
     const amountInput = readlineSync.question(
       'Enter the amount of SOL to send (default is 0.0009 SOL): '
     );
-    amountToSend = amountInput ? parseFloat(amountInput) : 0.001;
+    amountToSend = amountInput ? parseFloat(amountInput) : 0.009;
 
     if (isNaN(amountToSend) || amountToSend < rentExemptionAmount) {
       console.log(
