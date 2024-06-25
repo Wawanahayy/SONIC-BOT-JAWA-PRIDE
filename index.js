@@ -41,7 +41,7 @@ const { displayHeader } = require('./src/displayUtils');
     throw new Error(colors.red('Invalid input method selected'));
   }
 
-  const defaultAddressCount = 100;
+  const defaultAddressCount = 105;
   const addressCountInput = readlineSync.question(
     `How many random addresses do you want to generate? (default is ${defaultAddressCount}): `
   );
@@ -71,13 +71,13 @@ const { displayHeader } = require('./src/displayUtils');
         'Failed to fetch minimum balance for rent exemption. Using default value.'
       )
     );
-    rentExemptionAmount = 0.001;
+    rentExemptionAmount = 0.0009;
   }
 
   let amountToSend;
   do {
     const amountInput = readlineSync.question(
-      'Enter the amount of SOL to send (default is 0.001 SOL): '
+      'Enter the amount of SOL to send (default is 0.0009 SOL): '
     );
     amountToSend = amountInput ? parseFloat(amountInput) : 0.001;
 
@@ -90,7 +90,7 @@ const { displayHeader } = require('./src/displayUtils');
       console.log(
         colors.yellow(
           `Suggested amount to send: ${Math.max(
-            0.001,
+            0.0009,
             rentExemptionAmount
           )} SOL`
         )
