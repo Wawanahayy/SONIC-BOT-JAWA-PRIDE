@@ -12,7 +12,7 @@ const {
   LAMPORTS_PER_SOL,
 } = require('./src/solanaUtils');
 
-const { displayHeader } = require('./src/displayUtils');
+const { displayHeader } = require('./display/display');
 
 (async () => {
   displayHeader();
