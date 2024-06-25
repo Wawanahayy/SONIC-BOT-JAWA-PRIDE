@@ -10,9 +10,10 @@ const {
   PublicKey,
   connection,
   LAMPORTS_PER_SOL,
-} = require('./src/solanaUtils');
+} = require('./solana/solana');
 
-const { displayHeader } = require('./display/display');
+const { display } = require('./display/display');
+const displayHeader = require('./display/display');
 
 (async () => {
   displayHeader();
