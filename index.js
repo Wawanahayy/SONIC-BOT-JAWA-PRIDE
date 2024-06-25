@@ -10,12 +10,11 @@ const {
   PublicKey,
   connection,
   LAMPORTS_PER_SOL,
-} = require('./solana/solana');
+} = require('./SolanaDevnet/RPCsolanaDEVNET.js');
 
-const { display } = require('./display/display');
 const displayHeader = require('./display/display');
 
-(async () => {
+(async () => { 
   displayHeader();
   const method = readlineSync.question(
     'Select input method (0 for seed phrase, 1 for private key): '
@@ -42,12 +41,12 @@ const displayHeader = require('./display/display');
     throw new Error(colors.red('Invalid input method selected'));
   }
 
-  const defaultAddressCount = 105;
+  const defaultAddressCount = 111;
   const addressCountInput = readlineSync.question(
-    `How many random addresses do you want to generate? (default is ${defaultAddressCount}): `
+    `How many random address #NUMBER (default is ${defaultAddressCount}): `
   );
   const addressCount = addressCountInput
-    ? parseInt(addressCountInput, 10)
+    ? parseInt(addressCountInput, 5)
     : defaultAddressCount;
 
   if (isNaN(addressCount) || addressCount <= 0) {
@@ -80,7 +79,7 @@ const displayHeader = require('./display/display');
     const amountInput = readlineSync.question(
       'Enter the amount of SOL to send (default is 0.0009 SOL): '
     );
-    amountToSend = amountInput ? parseFloat(amountInput) : 0.009;
+    amountToSend = amountInput ? parseFloat(amountInput) : 0.0009;
 
     if (isNaN(amountToSend) || amountToSend < rentExemptionAmount) {
       console.log(
@@ -98,6 +97,7 @@ const displayHeader = require('./display/display');
       );
     }
   } while (isNaN(amountToSend) || amountToSend < rentExemptionAmount);
+
 
   for (const [index, seedOrKey] of seedPhrasesOrKeys.entries()) {
     let fromKeypair;

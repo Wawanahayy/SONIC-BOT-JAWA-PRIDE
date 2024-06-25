@@ -7,8 +7,6 @@ const {
   PublicKey,
   Keypair,
 } = require('@solana/web3.js');
-const bip39 = require('bip39');
-const { derivePath } = require('ed25519-hd-key');
 const base58 = require('bs58');
 const colors = require('colors');
 
