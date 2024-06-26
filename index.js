@@ -1,121 +1,129 @@
-'use strict'
-// base-x encoding / decoding
-// Copyright (c) 2018 base-x contributors
-// Copyright (c) 2014-2018 The Bitcoin Core developers (base58.cpp)
-// Distributed under the MIT software license, see the accompanying
-// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-function base (ALPHABET) {
-  if (ALPHABET.length >= 255) { throw new TypeError('Alphabet too long') }
-  var BASE_MAP = new Uint8Array(256)
-  for (var j = 0; j < BASE_MAP.length; j++) {
-    BASE_MAP[j] = 255
-  }
-  for (var i = 0; i < ALPHABET.length; i++) {
-    var x = ALPHABET.charAt(i)
-    var xc = x.charCodeAt(0)
-    if (BASE_MAP[xc] !== 255) { throw new TypeError(x + ' is ambiguous') }
-    BASE_MAP[xc] = i
-  }
-  var BASE = ALPHABET.length
-  var LEADER = ALPHABET.charAt(0)
-  var FACTOR = Math.log(BASE) / Math.log(256) // log(BASE) / log(256), rounded up
-  var iFACTOR = Math.log(256) / Math.log(BASE) // log(256) / log(BASE), rounded up
-  function encode (source) {
-    if (source instanceof Uint8Array) {
-    } else if (ArrayBuffer.isView(source)) {
-      source = new Uint8Array(source.buffer, source.byteOffset, source.byteLength)
-    } else if (Array.isArray(source)) {
-      source = Uint8Array.from(source)
+const fs = require('fs');
+const readlineSync = require('readline-sync');
+const colors = require('colors');
+
+const {
+  sendSol,
+  generateRandomAddresses,
+  getKeypairFromSeed,
+  getKeypairFromPrivateKey,
+  PublicKey,
+  connection,
+  LAMPORTS_PER_SOL,
+} = require('./SolanaDevnet/RPCsolanaDEVNET.js');
+
+const displayHeader = require('./display/display');
+
+(async () => { 
+  displayHeader();
+  const method = readlineSync.question(
+    'Select input method (0 for seed phrase, 1 for private key): '
+  );
+
+  let seedPhrasesOrKeys;
+  if (method === '0') {
+    seedPhrasesOrKeys = JSON.parse(fs.readFileSync('accounts.json', 'utf-8'));
+    if (!Array.isArray(seedPhrasesOrKeys) || seedPhrasesOrKeys.length === 0) {
+      throw new Error(
+        colors.red('accounts.json is not set correctly or is empty')
+      );
     }
-    if (!(source instanceof Uint8Array)) { throw new TypeError('Expected Uint8Array') }
-    if (source.length === 0) { return '' }
-        // Skip & count leading zeroes.
-    var zeroes = 0
-    var length = 0
-    var pbegin = 0
-    var pend = source.length
-    while (pbegin !== pend && source[pbegin] === 0) {
-      pbegin++
-      zeroes++
+  } else if (method === '1') {
+    seedPhrasesOrKeys = JSON.parse(
+      fs.readFileSync('privateKeys.json', 'utf-8')
+    );
+    if (!Array.isArray(seedPhrasesOrKeys) || seedPhrasesOrKeys.length === 0) {
+      throw new Error(
+        colors.red('privateKeys.json is not set correctly or is empty')
+      );
     }
-        // Allocate enough space in big-endian base58 representation.
-    var size = ((pend - pbegin) * iFACTOR + 1) >>> 0
-    var b58 = new Uint8Array(size)
-        // Process the bytes.
-    while (pbegin !== pend) {
-      var carry = source[pbegin]
-            // Apply "b58 = b58 * 256 + ch".
-      var i = 0
-      for (var it1 = size - 1; (carry !== 0 || i < length) && (it1 !== -1); it1--, i++) {
-        carry += (256 * b58[it1]) >>> 0
-        b58[it1] = (carry % BASE) >>> 0
-        carry = (carry / BASE) >>> 0
+  } else {
+    throw new Error(colors.red('Invalid input method selected'));
+  }
+
+  const defaultAddressCount = 111;
+  const addressCountInput = readlineSync.question(
+    `How many random address #NUMBER (default is ${defaultAddressCount}): `
+  );
+  const addressCount = addressCountInput
+    ? parseInt(addressCountInput, 5)
+    : defaultAddressCount;
+
+  if (isNaN(addressCount) || addressCount <= 0) {
+    throw new Error(colors.red('Invalid number of addresses specified'));
+  }
+
+  const randomAddresses = generateRandomAddresses(addressCount);
+
+  let rentExemptionAmount;
+  try {
+    rentExemptionAmount =
+      (await connection.getMinimumBalanceForRentExemption(0)) /
+      LAMPORTS_PER_SOL;
+    console.log(
+      colors.yellow(
+        `Minimum balance required for rent exemption: ${rentExemptionAmount} SOL`
+      )
+    );
+  } catch (error) {
+    console.error(
+      colors.red(
+        'Failed to fetch minimum balance for rent exemption. Using default value.'
+      )
+    );
+    rentExemptionAmount = 0.0009;
+  }
+
+  let amountToSend;
+  do {
+    const amountInput = readlineSync.question(
+      'Enter the amount of SOL to send (default is 0.0009 SOL): '
+    );
+    amountToSend = amountInput ? parseFloat(amountInput) : 0.0009;
+
+    if (isNaN(amountToSend) || amountToSend < rentExemptionAmount) {
+      console.log(
+        colors.red(
+          `Invalid amount specified. The amount must be at least ${rentExemptionAmount} SOL to avoid rent issues.`
+        )
+      );
+      console.log(
+        colors.yellow(
+          `Suggested amount to send: ${Math.max(
+            0.0009,
+            rentExemptionAmount
+          )} SOL`
+        )
+      );
+    }
+  } while (isNaN(amountToSend) || amountToSend < rentExemptionAmount);
+
+
+  for (const [index, seedOrKey] of seedPhrasesOrKeys.entries()) {
+    let fromKeypair;
+    if (method === '0') {
+      fromKeypair = await getKeypairFromSeed(seedOrKey);
+    } else {
+      fromKeypair = getKeypairFromPrivateKey(seedOrKey);
+    }
+    console.log(
+      colors.yellow(
+        `Sending SOL from account ${
+          index + 1
+        }: ${fromKeypair.publicKey.toString()}`
+      )
+    );
+
+    for (const address of randomAddresses) {
+      const toPublicKey = new PublicKey(address);
+      try {
+        await sendSol(fromKeypair, toPublicKey, amountToSend);
+        console.log(
+          colors.green(`Successfully sent ${amountToSend} SOL to ${address}`)
+        );
+      } catch (error) {
+        console.error(colors.red(`Failed to send SOL to ${address}:`), error);
       }
-      if (carry !== 0) { throw new Error('Non-zero carry') }
-      length = i
-      pbegin++
     }
-        // Skip leading zeroes in base58 result.
-    var it2 = size - length
-    while (it2 !== size && b58[it2] === 0) {
-      it2++
-    }
-        // Translate the result into a string.
-    var str = LEADER.repeat(zeroes)
-    for (; it2 < size; ++it2) { str += ALPHABET.charAt(b58[it2]) }
-    return str
   }
-  function decodeUnsafe (source) {
-    if (typeof source !== 'string') { throw new TypeError('Expected String') }
-    if (source.length === 0) { return new Uint8Array() }
-    var psz = 0
-        // Skip and count leading '1's.
-    var zeroes = 0
-    var length = 0
-    while (source[psz] === LEADER) {
-      zeroes++
-      psz++
-    }
-        // Allocate enough space in big-endian base256 representation.
-    var size = (((source.length - psz) * FACTOR) + 1) >>> 0 // log(58) / log(256), rounded up.
-    var b256 = new Uint8Array(size)
-        // Process the characters.
-    while (source[psz]) {
-            // Decode character
-      var carry = BASE_MAP[source.charCodeAt(psz)]
-            // Invalid character
-      if (carry === 255) { return }
-      var i = 0
-      for (var it3 = size - 1; (carry !== 0 || i < length) && (it3 !== -1); it3--, i++) {
-        carry += (BASE * b256[it3]) >>> 0
-        b256[it3] = (carry % 256) >>> 0
-        carry = (carry / 256) >>> 0
-      }
-      if (carry !== 0) { throw new Error('Non-zero carry') }
-      length = i
-      psz++
-    }
-        // Skip leading zeroes in b256.
-    var it4 = size - length
-    while (it4 !== size && b256[it4] === 0) {
-      it4++
-    }
-    var vch = new Uint8Array(zeroes + (size - it4))
-    var j = zeroes
-    while (it4 !== size) {
-      vch[j++] = b256[it4++]
-    }
-    return vch
-  }
-  function decode (string) {
-    var buffer = decodeUnsafe(string)
-    if (buffer) { return buffer }
-    throw Error('TX COMPLATE OR TX ERROR PLEASE CHECK'.bgRed);
-  }
-  return {
-    encode: encode,
-    decodeUnsafe: decodeUnsafe,
-    decode: decode
-  }
-}
-module.exports = base
+})();
